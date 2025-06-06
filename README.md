@@ -1,20 +1,16 @@
 # GHContribScraperReportGen
 
+## Introduction
+
 A tool to download all commits made by a GitHub user across specified repositories within a date range using GitHub API. Additionally, it can fetch commits made in pull requests by the user instead of just the final PR merge commit.
 
 The tool generates diffs for each commit and provides text reports of all commits grouped by repositories.
 
-Known limitations:
+**Prerequisites**:
 
-- The tool does not automatically scrape all repositories a user has contributed to. You need to specify the repositories you want to scan.
+- Python 3.10 or higher.
 
-- Only commits made to the default branch of the specified repositories are fetched.
-
-- End date is not supported. The tool will fetch all commits made after the specified start date until the current date.
-
-Prerequisites:
-
-- Python 3.10 or higher
+- Windows OS (other can be used, just without a 'run' PowerShell script helper).
 
 ## Quick Installation
 
@@ -22,9 +18,9 @@ Prerequisites:
 
 2. Run `.\run.ps1`.
 
-`\.run.ps1` is a PowerShell script that automates the installation of dependencies and the execution of the tool with the GUI. It also creates a virtual environment if it doesn't exist.
+'run' script is a PowerShell helper that automates the installation of dependencies and simplifies the usage of the tool. It also creates a Python virtual environment if it doesn't exist.
 
-## Manual installation
+## Manual installation (alternatively)
 
 1. Clone this repository or download the ZIP.
 
@@ -265,3 +261,13 @@ If you encounter SSL verification errors:
    This will automatically configure pip to use the system's CA certificates.
 
 - 4th option: As a last resort (not secure), use `--no-verify-ssl`.
+
+## Notes
+
+### Known limitations
+
+- The tool does not automatically scrape all repositories a user has contributed to. You need to specify the repositories you want to scan.
+
+- Only commits made to the default branch of the specified repositories are fetched.
+
+- End date is not supported. The tool will fetch all commits made after the specified start date until the current date.
