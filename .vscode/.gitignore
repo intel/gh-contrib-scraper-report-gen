@@ -1,0 +1,5 @@
+# Ignore everything in this directory
+*
+# Except from this file and "tasks.json"
+!.gitignore
+!tasks.json

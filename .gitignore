@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.clas
+
+# Coverity files
+coverity.yaml
+idir/
+
+# dotenv
+.env
+
+# virtualenv
+.venv/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Logs
+*.log
+
+# Default output dir
+output/

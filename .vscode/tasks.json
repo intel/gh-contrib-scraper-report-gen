@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run GUI",
+            "type": "shell",
+            "command": ".\\run.ps1",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run CLI",
+            "type": "shell",
+            "command": ".\\run.ps1",
+            "args": [
+                "-Tasks", "cli",
+                "-PythonArgs", "${input:pythonArgs}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "pythonArgs",
+            "description": "Python arguments to pass to the run script",
+            "type": "promptString"
+        }
+    ]
+}
