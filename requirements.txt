@@ -1,4 +1,4 @@
-nicegui == 2.20.*; python_version >= "3.8"
+nicegui == 2.21.*; python_version >= "3.8"
 PyGithub == 2.6.*; python_version >= "3.8"
 PyYAML == 6.0.*; python_version >= "3.8"
 requests == 2.32.*; python_version >= "3.8"
