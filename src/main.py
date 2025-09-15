@@ -63,7 +63,7 @@ def parse_repo_list(repos_str: str) -> list[str]:
 def parse_date(date_str: str) -> datetime:
     """Parse a date string into a datetime object.
 
-    Supported formats: YYYY-MM-DD, YYYY-MM-DD HH:MM:SS.
+    Supported formats: YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, YYYY-MM-DDTHH:MM:SS.
 
     Args:
         date_str: Date string to parse
@@ -73,7 +73,8 @@ def parse_date(date_str: str) -> datetime:
     """
     formats = [
         '%Y-%m-%d',
-        '%Y-%m-%d %H:%M:%S'
+        '%Y-%m-%d %H:%M:%S',
+        '%Y-%m-%dT%H:%M:%S',
     ]
 
     for fmt in formats:
@@ -82,7 +83,7 @@ def parse_date(date_str: str) -> datetime:
         except ValueError:
             continue
 
-    raise ValueError(f'Unsupported date format: {date_str}. Use YYYY-MM-DD or YYYY-MM-DD HH:MM:SS')
+        raise ValueError(f'Unsupported date format: {date_str}. Use YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, or YYYY-MM-DDTHH:MM:SS')
 
 
 def validate_args(args: argparse.Namespace) -> tuple[datetime, bool | str]:
@@ -124,7 +125,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description='GHContribScraperReportGen')
     parser.add_argument('username', help='GitHub username to scan for contributions')
-    parser.add_argument('--since', required=True, help='Only include contributions after this date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)')
+    parser.add_argument('--since', required=True, help='Only include contributions after this date (YYYY-MM-DD, YYYY-MM-DD HH:MM:SS or YYYY-MM-DDTHH:MM:SS)')
     parser.add_argument('--token', help='GitHub Personal Access Token or a map of owner tokens (comma-separated format: owner:token,owner2:token2)')
     parser.add_argument('--repositories', help='Comma-separated list of repositories (format: owner/repo)')
     parser.add_argument('--output', default='output', help='Output directory')

@@ -3,8 +3,13 @@
     "tasks": [
         {
             "label": "Run GUI",
+            "windows": {
+                "command": ".\\run.ps1",
+            },
+            "linux": {
+                "command": "./run.sh",
+            },
             "type": "shell",
-            "command": ".\\run.ps1",
             "group": "build",
             "presentation": {
                 "reveal": "always",
@@ -13,12 +18,21 @@
         },
         {
             "label": "Run CLI",
+            "windows": {
+                "command": ".\\run.ps1",
+                "args": [
+                    "-Tasks", "cli",
+                    "-PythonArgs", "${input:pythonArgs}"
+                ]
+            },
+            "linux": {
+                "command": "./run.sh",
+                "args": [
+                    "-Tasks", "cli",
+                    "-PythonArgs", "${input:pythonArgs}"
+                ]
+            },
             "type": "shell",
-            "command": ".\\run.ps1",
-            "args": [
-                "-Tasks", "cli",
-                "-PythonArgs", "${input:pythonArgs}"
-            ],
             "group": {
                 "kind": "build",
                 "isDefault": true

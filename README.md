@@ -10,15 +10,19 @@ The tool generates diffs for each commit and provides text reports of all commit
 
 - Python 3.10 or higher.
 
-- Windows OS (other can be used, just without a 'run' PowerShell script helper).
+- Windows or Linux OS.
 
 ## Quick Installation
 
 1. Clone this repository, download the ZIP or a release.
 
-2. Run `.\run.ps1`.
+2. Run the appropriate script for your OS:
+  - **Windows**: `.\run.ps1`
+  - **Linux**: `./run.sh`
 
-'run' script is a PowerShell helper that automates the installation of dependencies and simplifies the usage of the tool. It also creates a Python virtual environment if it doesn't exist.
+The `run` script is a helper that automates the installation of dependencies and simplifies the usage of the tool. It also creates a Python virtual environment if it doesn't exist.
+
+> __NOTE__: On Linux, you might need to make the script executable first by running: `chmod +x run.sh`
 
 ## Manual installation (alternatively)
 
@@ -26,57 +30,78 @@ The tool generates diffs for each commit and provides text reports of all commit
 
 2. Create a virtual environment:
 
-   ```powershell
-   python -m venv .venv ; .\.venv\Scripts\Activate.ps1
-   ```
+  - **Windows (PowerShell)**:
+    ```powershell
+    python -m venv .venv ; .\.venv\Scripts\Activate.ps1
+    ```
+  - **Linux (Bash)**:
+    ```bash
+    python3 -m venv .venv && source .venv/bin/activate
+    ```
 
-   > __NOTE__: This step is optional but recommended to avoid dependency conflicts with other projects. It will be created automatically if you use the run script though.
+  > __NOTE__: This step is optional but recommended to avoid dependency conflicts with other projects. It will be created automatically if you use the run script though.
 
 3. Install dependencies:
 
-   ```powershell
-   pip install -r requirements.txt
-   ```
+  ```powershell
+  pip install -r requirements.txt
+  ```
 
-   Or use the run script:
+  Or use the run script:
 
-   ```powershell
-   .\run.ps1 -Tasks install
-   ```
+  - **Windows (PowerShell)**:
+    ```powershell
+    .\run.ps1 -Tasks install
+    ```
+  - **Linux (Bash)**:
+    ```bash
+    ./run.sh install
+    ```
 
-   > __NOTE__: If using the run script, to provide custom pip flags, set the `PIP_INSTALL_FLAGS` environment variable before running. For example:
-   >
-   > ```powershell
-   > $env:PIP_INSTALL_FLAGS="--upgrade --trusted-host my.host"
-   > .\run.ps1 -Tasks install
-   > ```
-   >
-   > You don't actually need to run the `install` task if you are using the run script, as it will automatically install dependencies if they are not already installed when you run it with no additional params.
+  > __NOTE__: If using the run script, to provide custom pip flags, set the `PIP_INSTALL_FLAGS` environment variable before running. For example:
+  >
+  >  - **Windows (PowerShell)**:
+  >    ```powershell
+  >    $env:PIP_INSTALL_FLAGS="--upgrade --trusted-host my.host"
+  >    .\run.ps1 -Tasks install
+  >    ```
+  >  - **Linux (Bash)**:
+  >    ```bash
+  >    export PIP_INSTALL_FLAGS="--upgrade --trusted-host my.host"
+  >    ./run.sh install
+  >    ```
+  >
+  > You don't actually need to run the `install` task if you are using the run script, as it will automatically install dependencies if they are not already installed when you run it with no additional params.
 
 ## Setting up GitHub Personal Access Token
 
-   - Create tokens at [GitHub Personal Access Tokens page](https://github.com/settings/tokens) for all owners/organizations you want to scan.
+  - Create tokens at [GitHub Personal Access Tokens page](https://github.com/settings/tokens) for all owners/organizations you want to scan.
 
-   - For better security, consider using fine-grained tokens with the minimum required permissions (Read-only: Contents, Pull requests).
-   Make sure to select the desired organization as the resource owner.
+  - For better security, consider using fine-grained tokens with the minimum required permissions (Read-only: Contents, Pull requests).
+  Make sure to select the desired organization as the resource owner.
 
-   - Set it as an environment variable:
+  - Set it as an environment variable:
 
+    - **Windows (PowerShell)**:
       ```powershell
       $env:GITHUB_TOKEN="your_token_here"
       ```
-
-   - Or create a `.env` file with your token:
-
-      ```plain
-      GITHUB_TOKEN=your_token_here
+    - **Linux (Bash)**:
+      ```bash
+      export GITHUB_TOKEN="your_token_here"
       ```
 
-      > __NOTE__: The `.env` variables are loaded automatically only when using the run script.
+  - Or create a `.env` file with your token:
 
-   - Or pass it as a command-line `--token` argument or in the GUI.
+    ```plain
+    GITHUB_TOKEN=your_token_here
+    ```
 
-   > __NOTE__: If you are using multiple tokens, instead of passing a single token to the environment variable or command line parameter, you can pass a map of owner tokens (comma-separated `owner:token` pairs, e.g., `owner1:token1,owner2:token2`). The scraper will use the appropriate token for each repository based on its owner.
+    > __NOTE__: The `.env` variables are loaded automatically only when using the run script.
+
+  - Or pass it as a command-line `--token` argument or in the GUI.
+
+  > __NOTE__: If you are using multiple tokens, instead of passing a single token to the environment variable or command line parameter, you can pass a map of owner tokens (comma-separated `owner:token` pairs, e.g., `owner1:token1,owner2:token2`). The scraper will use the appropriate token for each repository based on its owner.
 
 ## Usage
 
@@ -84,15 +109,25 @@ The tool generates diffs for each commit and provides text reports of all commit
 
 A web‑based interface is available via NICEGUI. It exposes all CLI options (username, repositories, date, tokens, commit fields, report formats, etc.) with field validation and streams logs live. After completion, navigate to the output directory to view results.
 
-```powershell
-python -m src.main_gui
-```
+  - **Windows (PowerShell)**:
+    ```powershell
+    python -m src.main_gui
+    ```
+  - **Linux (Bash)**:
+    ```bash
+    python3 -m src.main_gui
+    ```
 
 or
 
-```powershell
-.\run.ps1 -Tasks gui
-```
+- **Windows (PowerShell)**:
+  ```powershell
+  .\run.ps1 -Tasks gui
+  ```
+- **Linux (Bash)**:
+  ```bash
+  ./run.sh gui
+  ```
 
 This will launch the GUI in your browser at __<http://localhost:8080/>__ and guide you through the inputs.
 
@@ -102,13 +137,15 @@ This will launch the GUI in your browser at __<http://localhost:8080/>__ and gui
 
 ```powershell
 python -m src.main <username> --since "YYYY-MM-DD" `
-   [--token "your_token_or_map_of_tokens"] `
-   [--repositories "owner1/repo1,owner2/repo2"] `
-   [--output OUTPUT] [--ca-bundle CA_BUNDLE_PATH] [--no-verify-ssl] [--fetch-pr-commits] [--include-merge-commits] `
-   [--commit-fields date url message sha stats files_changed] `
-   [--report-formats markdown text json] `
-   [--limit-download-diffs LIMIT_OF_FILES LIMIT_LINES_CHANGED]
+  [--token "your_token_or_map_of_tokens"] `
+  [--repositories "owner1/repo1,owner2/repo2"] `
+  [--output OUTPUT] [--ca-bundle CA_BUNDLE_PATH] [--no-verify-ssl] [--fetch-pr-commits] [--include-merge-commits] `
+  [--commit-fields date url message sha stats files_changed] `
+  [--report-formats markdown text json] `
+  [--limit-download-diffs LIMIT_OF_FILES LIMIT_LINES_CHANGED]
 ```
+
+> __NOTE__: On Linux, just call `python3` instead of `python`.
 
 - __username__: The GitHub username to scan
 
@@ -144,11 +181,15 @@ The `--since` parameter accepts the following date formats:
 
 - `YYYY-MM-DD HH:MM:SS` (e.g., "2023-01-01 00:00:00")
 
+- `YYYY-MM-DDTHH:MM:SS` (e.g., "2023-01-01T00:00:00")
+
 #### Example
 
 ```powershell
 python -m src.main octocat --repositories "octocat/Hello-World" --since "2022-01-01" --fetch-pr-commits --token "your_token_here"
 ```
+
+> __NOTE__: On Linux, just call `python3` instead of `python`.
 
 This will fetch direct commits, pull request commits made by __octocat__ since the given date, store diffs in an output directory, and generate a report listing all direct commits and commits made in __octocat__ PRs.
 
@@ -156,10 +197,16 @@ This will fetch direct commits, pull request commits made by __octocat__ since t
 
 You can also set the repositories to scan using an environment variable:
 
-```powershell
-$env:GITHUB_REPOSITORIES="owner/repo1,owner/repo2"
-python -m src.main <username> --since "2023-01-01" --token "your_token_here"
-```
+- **Windows (PowerShell)**:
+  ```powershell
+  $env:GITHUB_REPOSITORIES="owner/repo1,owner/repo2"
+  python -m src.main <username> --since "2023-01-01" --token "your_token_here"
+  ```
+- **Linux (Bash)**:
+  ```bash
+  export GITHUB_REPOSITORIES="owner/repo1,owner/repo2"
+  python3 -m src.main <username> --since "2023-01-01" --token "your_token_here"
+  ```
 
 Or in your `.env` file:
 
@@ -171,11 +218,16 @@ GITHUB_REPOSITORIES=owner/repo1,owner/repo2
 
 #### Using the Run Script
 
-The included PowerShell run script provides a convenient way to run the application:
+The included run script provides a convenient way to run the application:
 
-```powershell
-.\run.ps1 -Task cli -PythonArgs "<username> --repositories owner/repo1,owner/repo2 --since 2023-01-01 --fetch-pr-commits"
-```
+- **Windows (PowerShell)**:
+  ```powershell
+  .\run.ps1 -Tasks cli -PythonArgs "<username> --repositories owner/repo1,owner/repo2 --since 2023-01-01 --fetch-pr-commits"
+  ```
+- **Linux (Bash)**:
+  ```bash
+  ./run.sh cli -PythonArgs "<username> --repositories owner/repo1,owner/repo2 --since 2023-01-01 --fetch-pr-commits"
+  ```
 
 It will also automatically create a virtual environment if it doesn't exist and install the required dependencies.
 
@@ -229,10 +281,10 @@ If you're behind a corporate proxy, you may need to configure proxy settings:
 
 1. Add to your `.env` file:
 
-   ```plain
-   HTTP_PROXY=http://your-proxy-server:port
-   HTTPS_PROXY=http://your-proxy-server:port
-   ```
+  ```plain
+  HTTP_PROXY=http://your-proxy-server:port
+  HTTPS_PROXY=http://your-proxy-server:port
+  ```
 
 2. This helps resolve `ConnectTimeoutError` issues when connecting to GitHub.
 
@@ -242,23 +294,30 @@ If you encounter SSL verification errors:
 
 - 1st option: Point pip to use system certificates by setting `SSL_CERT_FILE` environment variable:
 
-   ```powershell
-   $env:SSL_CERT_FILE="C:\path\to\your\CAcert.crt"
-   ```
+  - **Windows (PowerShell)**:
+    ```powershell
+    $env:SSL_CERT_FILE="C:\path\to\your\CAcert.crt"
+    ```
+  - **Linux (Bash)**:
+    ```bash
+    export SSL_CERT_FILE="/path/to/your/CAcert.crt"
+    ```
 
 - 2nd option: Use the `--ca-bundle` parameter to specify a certificate bundle:
 
-   ```powershell
-   python -m src.main <username> --repositories "owner/repo" --since "2023-01-01" --ca-bundle "C:\path\to\your\CAcert.crt"
-   ```
+  ```powershell
+  python -m src.main <username> --repositories "owner/repo" --since "2023-01-01" --ca-bundle "C:\path\to\your\CAcert.crt"
+  ```
+
+  > __NOTE__: On Linux, just call `python3` instead of `python`.
 
 - 3rd option: If you're still facing issues, consider installing an additional package like `pip-system-certs` to use system certificates:
 
-   ```powershell
-   pip install pip-system-certs
-   ```
+  ```powershell
+  pip install pip-system-certs
+  ```
 
-   This will automatically configure pip to use the system's CA certificates.
+  This will automatically configure pip to use the system's CA certificates.
 
 - 4th option: As a last resort (not secure), use `--no-verify-ssl`.
 
