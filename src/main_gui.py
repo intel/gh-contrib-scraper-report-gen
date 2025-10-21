@@ -220,9 +220,7 @@ def launch_interface() -> None:
 
 
 def main() -> None:
-
-    launch_interface()
-    ui.run(title='GHContribScraperReportGen')
+    ui.run(launch_interface, title='GHContribScraperReportGen')
 
 
 if __name__ in {"__main__", "__mp_main__"}:

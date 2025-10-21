@@ -8,7 +8,7 @@ The tool generates diffs for each commit and provides text reports of all commit
 
 **Prerequisites**:
 
-- Python 3.10 or higher.
+- Python 3.9 or higher.
 
 - Windows or Linux OS.
 

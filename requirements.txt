@@ -1,7 +1,7 @@
-nicegui ~= 2.23; python_version >= "3.8"
-PyGithub ~= 2.6; python_version >= "3.8"
-PyYAML ~= 6.0; python_version >= "3.8"
-requests ~= 2.32; python_version >= "3.8"
+nicegui ~= 3.0; python_version >= "3.9"
+PyGithub ~= 2.6; python_version >= "3.9"
+PyYAML ~= 6.0; python_version >= "3.9"
+requests ~= 2.32; python_version >= "3.9"
 types-PyYAML
 types-requests
 
