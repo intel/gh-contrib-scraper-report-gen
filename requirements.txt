@@ -1,9 +1,18 @@
 nicegui ~= 3.0; python_version >= "3.9"
 PyGithub ~= 2.6; python_version >= "3.9"
 PyYAML ~= 6.0; python_version >= "3.9"
-requests ~= 2.32; python_version >= "3.9"
-types-PyYAML
-types-requests
+requests ~= 2.32, >= 2.32.4; python_version >= "3.9"
 
-# bandit[baseline]:  # can be used to scan for additional security issues in the code `python -m bandit src/ -r -c .\.bandit`
+# Dependencies' dependencies requiring specific versions
+aiohttp >= 3.12.14
+starlette >= 0.49.1
+urllib3 >= 2.5.0
+
+# Optional dependencies
 # pip-system-certs:  # for issues with SSL certificates
+
+# Development dependencies
+# types-PyYAML
+# types-requests
+# bandit[baseline]:  # can be used to scan for additional security issues in the code `python -m bandit src/ -r -c .\.bandit`
+
