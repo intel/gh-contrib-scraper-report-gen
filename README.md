@@ -143,7 +143,7 @@ python -m src.main <username> --since "YYYY-MM-DD" `
   [--repositories "owner1/repo1,owner2/repo2"] `
   [--branches "main,develop"] `
   [--output OUTPUT] [--ca-bundle CA_BUNDLE_PATH] [--no-verify-ssl] `
-  [--fetch-pr-commits] [--include-merge-commits] `
+  [--fetch-pr-commits] [--include-merge-commits] [--dedup-similar-commits] `
   [--commit-fields date url message sha stats files_changed] `
   [--report-formats markdown text json] `
   [--limit-download-diffs LIMIT_OF_FILES LIMIT_LINES_CHANGED]
@@ -170,6 +170,8 @@ python -m src.main <username> --since "YYYY-MM-DD" `
 - __--fetch-pr-commits__: Fetch any commits made in pull requests
 
 - __--include-merge-commits__: Include merge commits
+
+- __--dedup-similar-commits__: Drop duplicate commits that share the same repository, author timestamp, commit message, and set of changed files (e.g. cherry-picks that land on multiple branches). Makes one extra API call per commit to fetch the file list.
 
 - __--commit-fields__: Space-separated list of commit fields to include in reports.
   Possible values: `date`, `url`, `message`, `sha`, `stats`, `files_changed`.

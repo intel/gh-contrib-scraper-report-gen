@@ -45,6 +45,8 @@ def launch_interface() -> None:
             cmd.append('--fetch-pr-commits')
         if include_merge.value:
             cmd.append('--include-merge-commits')
+        if dedup_similar.value:
+            cmd.append('--dedup-similar-commits')
 
         cmd.extend([
             '--limit-download-diffs',
@@ -198,6 +200,9 @@ def launch_interface() -> None:
             ).style('width: 100%')
             fetch_pr = ui.checkbox('Fetch PR Commits').style('width: 100%')
             include_merge = ui.checkbox('Include Merge Commits').style('width: 100%')
+            dedup_similar = ui.checkbox(
+                'Dedup Similar Commits (drop cherry-picks with identical timestamp, message and files; makes extra API calls per commit)',
+            ).style('width: 100%')
             output_dir = ui.input('Output Directory', validation=validate_output_dir, value='output')\
                 .style('width: 100%').props('autocorrect=off').props('spellcheck=false')
 

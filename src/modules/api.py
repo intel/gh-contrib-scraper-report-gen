@@ -287,6 +287,7 @@ def process_commits_and_prs(
     repos: list[Repository], apis: dict[str, GitHubAPI], username: str, since_date: datetime,
     fetch_pr_commits: bool, include_merge_commits: bool,
     branches: list[str] | None = None,
+    dedup_similar_commits: bool = False,
 ) -> list[CommitRecord]:
     """Process commits and pull requests for the given repositories using appropriate API clients.
 
@@ -298,6 +299,9 @@ def process_commits_and_prs(
         fetch_pr_commits: Whether to include PR commits.
         include_merge_commits: Whether to include merge commits.
         branches: Optional list of branch names to scrape; None or empty means default branch only.
+        dedup_similar_commits: If True, after SHA deduplication drop any further commits within the
+            same repo that share the same author timestamp, message, and set of changed files
+            (e.g. cherry-picks). Makes one extra API call per commit to fetch file list.
 
     Returns:
         Lists of direct commit records and PR commit records. Exits if an API client is missing.
@@ -345,7 +349,14 @@ def process_commits_and_prs(
         # Fetch PRs if requested (only need to do this once per repo)
         if fetch_pr_commits:
             prs = api_client.fetch_user_pull_requests_in_repos([repo], username, since_date)
-            all_pull_requests.extend(prs)
+            # Filter PRs to only those targeting the specified branches (or default branch if none specified)
+            target_branches = set(branches) if branches else {repo.default_branch}
+            filtered_prs = [pr for pr in prs if pr.base.ref in target_branches]
+            log.debug(
+                'Filtered %d PRs to %d targeting branches %s in %s',
+                len(prs), len(filtered_prs), target_branches, repo.full_name,
+            )
+            all_pull_requests.extend(filtered_prs)
 
     all_pr_commit_records: list[CommitRecord] = []
     if fetch_pr_commits:
@@ -372,5 +383,24 @@ def process_commits_and_prs(
 
     final_commit_list = list(unique_commit_records.values())
     log.info("Total unique commit records found: %d", len(final_commit_list))
+
+    if dedup_similar_commits:
+        seen_content_keys: set[tuple] = set()
+        deduped: list[CommitRecord] = []
+        for record in final_commit_list:
+            try:
+                filenames = frozenset(f.filename for f in record.commit.files)
+            except Exception as e:  # pylint: disable=W0718:broad-exception-caught
+                log.warning('Could not fetch files for commit %s, including without content check: %s', record.commit.sha[:8], str(e))
+                deduped.append(record)
+                continue
+            key = (record.repo_full_name, record.commit.commit.author.date, record.commit.commit.message, filenames)
+            if key not in seen_content_keys:
+                seen_content_keys.add(key)
+                deduped.append(record)
+            else:
+                log.debug('Dedup similar commits: dropping %s (same repo/timestamp/message/files as earlier commit)', record.commit.sha[:8])
+        log.info('Dedup similar commits: %d → %d commits', len(final_commit_list), len(deduped))
+        final_commit_list = deduped
 
     return final_commit_list

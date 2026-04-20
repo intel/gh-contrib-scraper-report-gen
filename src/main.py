@@ -97,7 +97,7 @@ def parse_date(date_str: str) -> datetime:
         except ValueError:
             continue
 
-        raise ValueError(f'Unsupported date format: {date_str}. Use YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, or YYYY-MM-DDTHH:MM:SS')
+    raise ValueError(f'Unsupported date format: {date_str}. Use YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, or YYYY-MM-DDTHH:MM:SS')
 
 
 def validate_args(args: argparse.Namespace) -> tuple[datetime, bool | str]:
@@ -148,6 +148,7 @@ def main() -> None:
     parser.add_argument('--no-verify-ssl', action='store_true', help='Disable SSL verification (not recommended)')
     parser.add_argument('--fetch-pr-commits', action='store_true', help='Fetch commits associated with user pull requests (may increase API usage)')
     parser.add_argument('--include-merge-commits', action='store_true', help='Include merge commits in the output (often excluded by default)')
+    parser.add_argument('--dedup-similar-commits', action='store_true', help='Drop duplicate commits sharing the same repo, author timestamp, message, and changed files (e.g. cherry-picks). Makes one extra API call per commit')
     parser.add_argument(
         '--commit-fields',
         nargs='+',
@@ -222,6 +223,7 @@ def main() -> None:
     all_unique_commit_records = process_commits_and_prs(
         repos, apis, args.username, since_date, args.fetch_pr_commits, args.include_merge_commits,
         branches=branches if branches else None,
+        dedup_similar_commits=args.dedup_similar_commits,
     )
 
     if not all_unique_commit_records:
