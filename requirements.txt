@@ -1,7 +1,7 @@
 nicegui ~= 3.12; python_version >= "3.10"
 PyGithub ~= 2.9; python_version >= "3.9"
 PyYAML ~= 6.0; python_version >= "3.8"
-requests ~= 2.32, >= 2.32.4; python_version >= "3.9"
+requests ~= 2.34; python_version >= "3.9"
 
 # Optional dependencies
 # pip-system-certs:  # for issues with SSL certificates
