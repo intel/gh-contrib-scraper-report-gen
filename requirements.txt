@@ -11,3 +11,7 @@ requests ~= 2.34; python_version >= "3.14"
 # types-requests
 # bandit[baseline]:  # can be used to scan for additional security issues in the code `python -m bandit src/ -r -c .\.bandit`
 
+# Keep .bom in sync whenever the dependencies above change. From an activated venv (PowerShell or Bash), regenerate
+# its package list (below the header) with the command below. It resolves for the current platform only, so keep
+# platform-specific packages (e.g. uvloop, which is not installed on Windows). -X utf8 avoids encoding errors on Windows:
+#   python -X utf8 -m pip install --dry-run --ignore-installed --quiet --report - -r requirements.txt | python -X utf8 -c "import json, sys; print('\n'.join(sorted({p['metadata']['name'].lower().replace('_', '-').replace('.', '-') for p in json.load(sys.stdin)['install']})))"
