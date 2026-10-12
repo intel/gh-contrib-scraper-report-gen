@@ -84,13 +84,7 @@ class ReportGenerator:
             commits_by_repo_full_name: Dictionary mapping repository names to commit lists
         """
         with open(self.md_report_path, 'w', encoding='utf-8') as f:
-            # Create a set of all repositories from commits
-            all_repos_full_names = set(commits_by_repo_full_name.keys())
-
-            for repo_full_name in sorted(all_repos_full_names):
-                if repo_full_name not in commits_by_repo_full_name:
-                    continue
-
+            for repo_full_name in sorted(commits_by_repo_full_name):
                 f.write(f'## {repo_full_name}\n\n')
 
                 # Add repository description if available
@@ -120,13 +114,7 @@ class ReportGenerator:
             commits_by_repo_full_name: Dictionary mapping repository names to commit lists
         """
         with open(self.text_report_path, 'w', encoding='utf-8') as f:
-            # Create a set of all repositories from commits
-            all_repos_full_names = set(commits_by_repo_full_name.keys())
-
-            for repo_full_name in sorted(all_repos_full_names):
-                if repo_full_name not in commits_by_repo_full_name:
-                    continue
-
+            for repo_full_name in sorted(commits_by_repo_full_name):
                 f.write(f'- {repo_full_name}\n\n')
 
                 # Add repository description if available
@@ -153,7 +141,7 @@ class ReportGenerator:
         """
         report_data = []
 
-        for repo_full_name, commits in commits_by_repo_full_name.items():
+        for repo_full_name, commits in sorted(commits_by_repo_full_name.items()):
             repo_data: dict[str, Any] = {
                 'name': repo_full_name,
                 'description': repo_descriptions.get(repo_full_name, ''),
@@ -177,6 +165,10 @@ class ReportGenerator:
         Returns:
             A dictionary containing chosen commit data
         """
+        if 'stats' in self.commit_fields or 'files_changed' in self.commit_fields:
+            # Fetch full commit details once; on an incomplete commit, `.files` re-fetches it on every access
+            commit.complete()
+
         commit_data: dict[str, Any] = {}
         if 'date' in self.commit_fields:
             commit_data['date'] = commit.commit.author.date.isoformat()

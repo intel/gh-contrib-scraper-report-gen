@@ -27,8 +27,12 @@ def launch_interface() -> None:
         run_btn.props('disabled')
         abort_btn.props(remove='disabled')
 
-        os.environ['GITHUB_REPOSITORIES'] = ','.join([r.strip() for r in repositories.value.splitlines() if r.strip()]) or GITHUB_REPOSITORIES
-        os.environ['GITHUB_TOKEN'] = ','.join([t.strip() for t in token_map.value.splitlines() if t.strip()]) or GITHUB_TOKEN
+        # Pass inputs to the subprocess only, so they don't leak into later runs via os.environ
+        env = {
+            **os.environ,
+            'GITHUB_REPOSITORIES': ','.join([r.strip() for r in repositories.value.splitlines() if r.strip()]) or GITHUB_REPOSITORIES,
+            'GITHUB_TOKEN': ','.join([t.strip() for t in token_map.value.splitlines() if t.strip()]) or GITHUB_TOKEN,
+        }
 
         cmd = [
             sys.executable, '-m', 'src.main',
@@ -57,7 +61,7 @@ def launch_interface() -> None:
         try:
             proc_sync = await asyncio.to_thread(
                 lambda: subprocess.Popen(
-                    cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env
                 )
             )
             proc_ref['proc'] = proc_sync
@@ -68,13 +72,13 @@ def launch_interface() -> None:
                 raw = await asyncio.to_thread(proc_sync.stdout.readline)
                 if not raw:
                     break
-                log_output.content += raw.decode()
+                log_output.content += raw.decode('utf-8', errors='replace')
                 log_output.update()
             await asyncio.to_thread(proc_sync.wait)
 
         finally:
             proc_ref['proc'] = None
-            run_btn.props(remove='disabled')
+            update_run_button()
             abort_btn.props('disabled')
 
     def abort_tool() -> None:
@@ -201,7 +205,7 @@ def launch_interface() -> None:
             fetch_pr = ui.checkbox('Fetch PR Commits').style('width: 100%')
             include_merge = ui.checkbox('Include Merge Commits').style('width: 100%')
             dedup_similar = ui.checkbox(
-                'Dedup Similar Commits (drop cherry-picks with identical timestamp, message and files; makes extra API calls per commit)',
+                'Dedup Similar Commits (drop cherry-picks with identical timestamp, message and files; fetches full commit details for each commit up front)',
             ).style('width: 100%')
             output_dir = ui.input('Output Directory', validation=validate_output_dir, value='output')\
                 .style('width: 100%').props('autocorrect=off').props('spellcheck=false')
@@ -220,7 +224,7 @@ def launch_interface() -> None:
             # NOTE: Don't disable run button on invalid output_dir
             for field in [username, repositories, token_map, since, max_files, max_lines_changed]:
                 # Call validate() on interaction and update button state
-                field.on('blur', lambda _, f=field: f.validate() and update_run_button())  # type: ignore
+                field.on('blur', lambda _, f=field: (f.validate(), update_run_button()))  # type: ignore
                 # Trigger validate() initially to show potential errors on load
                 field.validate()
             # Set initial button state based on initial validation results

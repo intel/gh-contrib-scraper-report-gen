@@ -148,7 +148,7 @@ def main() -> None:
     parser.add_argument('--no-verify-ssl', action='store_true', help='Disable SSL verification (not recommended)')
     parser.add_argument('--fetch-pr-commits', action='store_true', help='Fetch commits associated with user pull requests (may increase API usage)')
     parser.add_argument('--include-merge-commits', action='store_true', help='Include merge commits in the output (often excluded by default)')
-    parser.add_argument('--dedup-similar-commits', action='store_true', help='Drop duplicate commits sharing the same repo, author timestamp, message, and changed files (e.g. cherry-picks). Makes one extra API call per commit')
+    parser.add_argument('--dedup-similar-commits', action='store_true', help='Drop duplicate commits sharing the same repo, author timestamp, message, and changed files (e.g. cherry-picks). Fetches full commit details for each commit up front to compare file lists')
     parser.add_argument(
         '--commit-fields',
         nargs='+',
@@ -207,12 +207,6 @@ def main() -> None:
     branches_str = args.branches or os.environ.get('GITHUB_BRANCHES', '')
     branches: list[str] = parse_branch_list(branches_str)
 
-    # Create output tree and save metadata
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_path = os.path.join(args.output, timestamp)
-    os.makedirs(output_path, exist_ok=True)
-    save_metadata(output_path, args.username, repo_full_names, since_date, branches=branches if branches else None)
-
     # Fetch repositories
     repos = fetch_repositories(apis, repos_by_owner)
     if not repos:
@@ -229,6 +223,11 @@ def main() -> None:
     if not all_unique_commit_records:
         log.warning('No relevant commit contributions found for user %s since %s in the specified repositories', args.username, since_date.date())
         sys.exit(0)
+
+    # Create output tree and save metadata (only once there is something to report)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    output_path = os.path.join(args.output, timestamp)
+    save_metadata(output_path, args.username, repo_full_names, since_date, branches=branches if branches else None)
 
     # Extract repo descriptions for reports
     repo_descriptions = {repo.full_name: repo.description for repo in repos if repo.description}

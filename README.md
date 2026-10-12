@@ -109,7 +109,7 @@ The `run` script is a helper that automates the installation of dependencies and
 
 ### Graphical User Interface (GUI)
 
-A web‑based interface is available via NICEGUI. It exposes all CLI options (username, repositories, date, tokens, commit fields, report formats, etc.) with field validation and streams logs live. After completion, navigate to the output directory to view results.
+A web‑based interface is available via NICEGUI. It exposes the main CLI options (username, repositories, branches, date, tokens, commit fields, report formats, PR/merge/dedup toggles, output directory, diff limits) with field validation and streams logs live. `--ca-bundle` and `--no-verify-ssl` are CLI-only; for the GUI, set `REQUESTS_CA_BUNDLE` or `SSL_CERT_FILE` before launching. After completion, navigate to the timestamped subfolder of the output directory to view results.
 
   - **Windows (PowerShell)**:
     ```powershell
@@ -146,7 +146,7 @@ python -m src.main <username> --since "YYYY-MM-DD" `
   [--fetch-pr-commits] [--include-merge-commits] [--dedup-similar-commits] `
   [--commit-fields date url message sha stats files_changed] `
   [--report-formats markdown text json] `
-  [--limit-download-diffs LIMIT_OF_FILES LIMIT_LINES_CHANGED]
+  [--limit-download-diffs LIMIT_FILES LIMIT_LINES_CHANGED]
 ```
 
 > __NOTE__: On Linux, just call `python3` instead of `python`.
@@ -161,7 +161,7 @@ python -m src.main <username> --since "YYYY-MM-DD" `
 
 - __--branches__: Comma-separated list of branch names to scrape (e.g. `main,develop`). If omitted, only each repository's default branch is scraped. Can also be set via `GITHUB_BRANCHES` environment variable.
 
-- __--output__: Output directory for the results (default: `output/`)
+- __--output__: Base output directory (default: `output/`); each run writes its results to a timestamped subdirectory `<output>/<YYYYmmdd_HHMMSS>/`
 
 - __--ca-bundle__: Path to a custom SSL CA bundle file
 
@@ -171,7 +171,7 @@ python -m src.main <username> --since "YYYY-MM-DD" `
 
 - __--include-merge-commits__: Include merge commits
 
-- __--dedup-similar-commits__: Drop duplicate commits that share the same repository, author timestamp, commit message, and set of changed files (e.g. cherry-picks that land on multiple branches). Makes one extra API call per commit to fetch the file list.
+- __--dedup-similar-commits__: Drop duplicate commits that share the same repository, author timestamp, commit message, and set of changed files (e.g. cherry-picks that land on multiple branches). Fetches full commit details for each commit up front to compare file lists; these are reused for reports and diffs, so only commits dropped as duplicates cost an additional API call.
 
 - __--commit-fields__: Space-separated list of commit fields to include in reports.
   Possible values: `date`, `url`, `message`, `sha`, `stats`, `files_changed`.
@@ -179,7 +179,7 @@ python -m src.main <username> --since "YYYY-MM-DD" `
 
 - __--report-formats__: Space-separated list of report formats to generate. Options: `text`, `markdown`, `json`. Default: `text`
 
-- __--limit-download-diffs__: Limit downloading diffs for commits whose file count or total lines changed exceed the given thresholds. Provide two integers: `LIMIT_OF_FILES` and `LIMIT_LINES_CHANGED`. Defaults are `30` and `3000`. Commits above either limit are skipped with an informational log.
+- __--limit-download-diffs__: Limit downloading diffs for commits whose file count or total lines changed exceed the given thresholds. Provide two integers: `LIMIT_FILES` and `LIMIT_LINES_CHANGED`. Defaults are `30` and `3000`. Commits above either limit are skipped with an informational log.
 
 #### Date Format
 
@@ -337,6 +337,6 @@ If you encounter SSL verification errors:
 
 - The tool does not automatically scrape all repositories a user has contributed to. You need to specify the repositories you want to scan.
 
-- Only commits made to the default branch of the specified repositories are fetched.
+- By default only commits on each repository's default branch are fetched; use `--branches` (or `GITHUB_BRANCHES`) to scrape other branches.
 
 - End date is not supported. The tool will fetch all commits made after the specified start date until the current date.

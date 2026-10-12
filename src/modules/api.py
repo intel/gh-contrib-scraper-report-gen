@@ -111,6 +111,7 @@ class GitHubAPI:
             List of pull requests matching the criteria
         """
         all_pull_requests: list[PullRequest] = []
+        username_lc = username.lower()
         for repo in repos:
             log.info('Fetching pull requests by %s in %s updated after %s', username, repo.full_name, since.isoformat())
             try:
@@ -122,7 +123,7 @@ class GitHubAPI:
                         f'Pull request updated_at is None for PR #{pr.number} in {repo.full_name}'
                     if pr.updated_at < since.replace(tzinfo=timezone.utc):
                         break
-                    if pr.user.login == username:
+                    if pr.user and pr.user.login.lower() == username_lc:
                         all_pull_requests.append(pr)
                 log.debug(
                     'Fetched %d pull requests by %s in %s updated after %s',
@@ -146,9 +147,10 @@ class GitHubAPI:
         """
         log.info('Fetching relevant %s commits in PR #%d in %s', username, pr.number, pr.base.repo.full_name)
         user_commit_records: list[CommitRecord] = []
+        username_lc = username.lower()
         try:
             for commit in pr.get_commits():
-                if commit.author and commit.author.login == username:
+                if commit.author and commit.author.login.lower() == username_lc:
                     if commit.commit.author.date >= since.replace(tzinfo=timezone.utc):
                         # Ignore merge commits
                         if len(commit.parents) > 1:
@@ -301,7 +303,8 @@ def process_commits_and_prs(
         branches: Optional list of branch names to scrape; None or empty means default branch only.
         dedup_similar_commits: If True, after SHA deduplication drop any further commits within the
             same repo that share the same author timestamp, message, and set of changed files
-            (e.g. cherry-picks). Makes one extra API call per commit to fetch file list.
+            (e.g. cherry-picks). Fetches full commit details up front (one call per commit, reused later
+            for reports and diffs); commits dropped as duplicates cost a call that would otherwise not be made.
 
     Returns:
         Lists of direct commit records and PR commit records. Exits if an API client is missing.
@@ -389,6 +392,9 @@ def process_commits_and_prs(
         deduped: list[CommitRecord] = []
         for record in final_commit_list:
             try:
+                # Complete the commit so the response is cached; on an incomplete commit, `.files` re-fetches
+                # the commit on every access without caching it, and `.stats` later fetches it again
+                record.commit.complete()
                 filenames = frozenset(f.filename for f in record.commit.files)
             except Exception as e:  # pylint: disable=W0718:broad-exception-caught
                 log.warning('Could not fetch files for commit %s, including without content check: %s', record.commit.sha[:8], str(e))

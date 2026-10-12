@@ -41,13 +41,17 @@ class DiffGenerator:
         saved_count = 0
 
         for record in commit_records:
+            # Fetch full commit details once; later `.stats` and `.files` accesses reuse the cached response
+            record.commit.complete()
+
             # Skip if the commit exceeds the line change limit
             if record.commit.stats.total > self.limit_lines_changed:
                 log.info(
-                    'Skipping commit %s in %s: exceeds limit (%d lines changed)',
+                    'Skipping commit %s in %s: exceeds limit (%d > %d lines changed)',
                     record.commit.sha,
                     record.repo_full_name,
-                    self.limit_lines_changed
+                    record.commit.stats.total,
+                    self.limit_lines_changed,
                 )
                 continue
 
@@ -60,7 +64,7 @@ class DiffGenerator:
 
                 if num_files > self.limit_files:
                     log.info(
-                        'Skipping diff for commit %s in %s: exceeds limits (%d files)',
+                        'Skipping diff for commit %s in %s: exceeds limit (more than %d files)',
                         record.commit.sha,
                         record.repo_full_name,
                         self.limit_files,
@@ -92,7 +96,4 @@ class DiffGenerator:
             except Exception as e:  # pylint: disable=W0718:broad-exception-caught
                 log.error('Failed to save diff for commit %s: %s', commit.sha, str(e))
 
-        if saved_count > 10:
-            log.info('Downloaded %d/%d commit diffs...', saved_count, len(commit_records))
-        else:
-            log.debug('Successfully saved %d/%d commit diffs', saved_count, len(commit_records))
+        log.info('Saved %d/%d commit diffs', saved_count, len(commit_records))

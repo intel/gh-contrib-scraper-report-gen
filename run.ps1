@@ -53,7 +53,9 @@ function Import-EnvVars {
 # Install pip requirements
 function Install-Requirements {
     Write-Host "Installing dependencies..." -ForegroundColor Green
-    pip install $PipFlags -r $RequirementsFile
+    # Split flags so multiple values are passed as separate arguments (like run.sh)
+    $PipArgs = @($PipFlags -split '\s+' | Where-Object { $_ })
+    pip install @PipArgs -r $RequirementsFile
 }
 
 # Execute a single task
