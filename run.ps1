@@ -18,15 +18,39 @@ $RequirementsFile = ".\requirements.txt"
 # Read additional pip flags from environment
 $PipFlags = $env:PIP_INSTALL_FLAGS
 
+# Run a Python command given as an array (e.g. @("py", "-3")) with the given arguments
+function Invoke-Python {
+    param([string[]]$PythonCommand, [string[]]$Arguments)
+    # Keep the arguments an array: splatting a single string would pass it character by character
+    $exeArgs = @($PythonCommand | Select-Object -Skip 1) + $Arguments
+    & $PythonCommand[0] @exeArgs
+}
+
+# Exit if the given Python command is older than Python 3.14
+function Assert-PythonVersion {
+    param([string[]]$PythonCommand, [string]$Hint)
+    # A missing command doesn't update $LASTEXITCODE, so check for it explicitly
+    $Found = Get-Command $PythonCommand[0] -ErrorAction SilentlyContinue
+    if ($Found) { Invoke-Python $PythonCommand @("-c", "import sys; sys.exit(sys.version_info < (3, 14))") }
+    if (-not $Found -or $LASTEXITCODE -ne 0) {
+        Write-Host "Python 3.14 or higher is required ($($PythonCommand -join ' ')). $Hint" -ForegroundColor Red
+        exit 1
+    }
+}
+
 # Check if virtual environment exists. If not, create it.
 # Returns true if venv was created and thus requirements need to be installed
 function Enable-Venv {
     if (Test-Path $VenvPath) {
         Write-Host "Activating virtual environment..." -ForegroundColor Cyan
+        Assert-PythonVersion @("$VenvPath\Scripts\python.exe") "Run '.\run.ps1 clean' to recreate the virtual environment."
         $InstallingRequirementsNeeded = $false
     } else {
         Write-Host "Virtual environment not found. Creating one..." -ForegroundColor Yellow
-        python -m venv $VenvPath
+        # Prefer the Python launcher so the newest Python 3 is used even if it isn't first on PATH
+        $Python = if (Get-Command py -ErrorAction SilentlyContinue) { @("py", "-3") } else { @("python") }
+        Assert-PythonVersion $Python "Install Python 3.14 or higher, or put it first on PATH."
+        Invoke-Python $Python @("-m", "venv", $VenvPath)
         $InstallingRequirementsNeeded = $true
     }
     & "$VenvPath\Scripts\Activate.ps1"

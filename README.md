@@ -8,7 +8,7 @@ The tool generates diffs for each commit and provides text reports of all commit
 
 **Prerequisites**:
 
-- Python 3.10 or higher.
+- Python 3.14 or higher.
 
 - Windows or Linux OS.
 
@@ -34,11 +34,11 @@ The `run` script is a helper that automates the installation of dependencies and
 
   - **Windows (PowerShell)**:
     ```powershell
-    python -m venv .venv ; .\.venv\Scripts\Activate.ps1
+    py -3.14 -m venv .venv ; .\.venv\Scripts\Activate.ps1
     ```
   - **Linux (Bash)**:
     ```bash
-    python3 -m venv .venv && source .venv/bin/activate
+    python3.14 -m venv .venv && source .venv/bin/activate
     ```
 
   > __NOTE__: This step is optional but recommended to avoid dependency conflicts with other projects. It will be created automatically if you use the run script though.

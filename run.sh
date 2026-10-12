@@ -43,17 +43,30 @@ REQUIREMENTS_FILE="./requirements.txt"
 # Read additional pip flags from environment
 # This is the same: $PIP_INSTALL_FLAGS is used by pip command
 
+# Python interpreter used to create the virtual environment (override with PYTHON_BIN)
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3.14 || command -v python3)}"
+
+# Exit if the given interpreter is older than Python 3.14
+function check_python_version {
+    if ! "$1" -c 'import sys; sys.exit(sys.version_info < (3, 14))'; then
+        echo "Python 3.14 or higher is required (found $("$1" --version 2>&1) at $1). $2" >&2
+        exit 1
+    fi
+}
+
 # Check if virtual environment exists. If not, create it.
 # Returns 0 if venv was created and thus requirements need to be installed
 function enable_venv {
     if [ -d "$VENV_PATH" ]; then
         echo "Activating virtual environment..."
+        check_python_version "$VENV_PATH/bin/python" "Run './run.sh clean' to recreate the virtual environment."
         # shellcheck disable=SC1091
         source "$VENV_PATH/bin/activate"
         return 1 # false, no install needed
     else
         echo "Virtual environment not found. Creating one..."
-        python3 -m venv "$VENV_PATH"
+        check_python_version "$PYTHON_BIN" "Set PYTHON_BIN to a Python 3.14+ interpreter."
+        "$PYTHON_BIN" -m venv "$VENV_PATH"
         # shellcheck disable=SC1091
         source "$VENV_PATH/bin/activate"
         return 0 # true, install needed
