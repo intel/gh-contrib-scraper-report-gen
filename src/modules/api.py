@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 from github import Github
 from github.Commit import Commit
+from github.GithubObject import NotSet
 from github.Repository import Repository
 from github.PullRequest import PullRequest
 
@@ -88,7 +89,8 @@ class GitHubAPI:
         branch_info = f' on {sha}' if sha else ''
         log.info('Fetching direct commits by %s in %s%s since %s', username, repo.full_name, branch_info, since.isoformat())
         try:
-            commits: list[Commit] = list(repo.get_commits(author=username, since=since, sha=sha))
+            # PyGithub asserts on sha=None; NotSet means the repository's default branch
+            commits: list[Commit] = list(repo.get_commits(author=username, since=since, sha=sha if sha else NotSet))
             if not include_merge_commits:
                 commits = [c for c in commits if len(c.parents) <= 1]
             if exclude_pr_merge_commits:
