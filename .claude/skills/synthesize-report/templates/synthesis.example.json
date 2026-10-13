@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "title": "Work summary: September 2026",
+  "grouping": "repository",
+  "summary": [
+    "Focused on hardening the storage layer of example-service and on release tooling for example-tool."
+  ],
+  "sections": [
+    {
+      "name": "example-org/example-service",
+      "description": "Backend service for example data processing.",
+      "items": [
+        {"text": "Added **cache validation** to the storage layer, rejecting stale entries on read.", "commits": ["0123456"]},
+        {"text": "Covered corrupted-input edge cases with new tests.", "commits": ["89abcde", "fedcba9"]}
+      ]
+    },
+    {
+      "name": "example-org/example-tool",
+      "items": [
+        {"text": "Automated release notes generation from `CHANGELOG.md`.", "commits": ["1a2b3c4"]}
+      ]
+    }
+  ],
+  "notes": ["Commit diffs are available separately."]
+}

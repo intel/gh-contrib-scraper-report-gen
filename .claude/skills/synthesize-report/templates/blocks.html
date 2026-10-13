@@ -1,0 +1,39 @@
+<!--
+  Copyright (C) 2026 Intel Corporation
+  SPDX-License-Identifier: Apache-2.0
+
+  Fragments used by scripts/render.py to fill report.html. Each block runs from its
+  "block:" marker to the next marker; leading/trailing newlines are trimmed, spaces kept.
+  Keep to elements that rich-text editors accept and can edit: h2-h4, p, ul/ol/li,
+  strong/em/u, sub/sup, code, a[href]. Inline styles and CSS are usually stripped on paste.
+  All $placeholders are filled with already-escaped HTML.
+-->
+<!-- block: period -->
+<p><strong>$label:</strong> $value</p>
+<!-- block: summary_paragraph -->
+<p>$text</p>
+<!-- block: section -->
+<h3>$name</h3>
+$description
+<ul>
+$items
+</ul>
+<!-- block: section_description -->
+<p>$text</p>
+<!-- block: item -->
+<li>$text$refs$end</li>
+<!-- block: refs -->
+ ($links)
+<!-- block: ref_link -->
+<a href="$url">$label</a>
+<!-- block: ref_separator -->
+, 
+<!-- block: stats -->
+<h3>$heading</h3>
+<ul>
+$rows
+</ul>
+<!-- block: stat -->
+<li><strong>$label:</strong> $value</li>
+<!-- block: note -->
+<p><em>$text</em></p>
