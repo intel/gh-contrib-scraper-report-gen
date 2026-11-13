@@ -3,6 +3,10 @@ PyGithub ~= 2.10; python_version >= "3.14"
 PyYAML ~= 6.0; python_version >= "3.14"
 requests ~= 2.34; python_version >= "3.14"
 
+# Minimum versions for transitive dependencies with known vulnerabilities (not imported directly).
+# Drop a line once the direct dependency that pulls it in requires a fixed version itself.
+certifi >= 2026.10.18; python_version >= "3.14"  # GHSA-6q48-6c7w-9gw2 (critical): emSign root CAs with compromised intermediates
+
 # Optional dependencies
 # pip-system-certs:  # for issues with SSL certificates
 
