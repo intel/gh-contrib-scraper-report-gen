@@ -12,3 +12,8 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+    groups:
+      # init and analyze must always run the same version, or CodeQL fails
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
