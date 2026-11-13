@@ -15,8 +15,8 @@ $VenvPath = ".\.venv"
 $EnvFile = ".\.env"
 $RequirementsFile = ".\requirements.txt"
 
-# Read additional pip flags from environment
-$PipFlags = $env:PIP_INSTALL_FLAGS
+# Read additional pip flags from environment (legacy name: PIP_INSTALL_FLAGS)
+$PipFlags = if ($env:GHCS_PIP_FLAGS) { $env:GHCS_PIP_FLAGS } else { $env:PIP_INSTALL_FLAGS }
 
 # Run a Python command given as an array (e.g. @("py", "-3")) with the given arguments
 function Invoke-Python {

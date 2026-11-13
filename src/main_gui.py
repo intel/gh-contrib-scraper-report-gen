@@ -12,11 +12,13 @@ import subprocess
 
 from nicegui import ui
 
+from src.modules.settings import get_env
+
 
 def launch_interface() -> None:
 
-    GITHUB_REPOSITORIES = os.environ.get('GITHUB_REPOSITORIES', '')
-    GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
+    GHCS_REPOSITORIES = get_env('GHCS_REPOSITORIES')
+    GHCS_TOKEN = get_env('GHCS_TOKEN')
 
     proc_ref: dict[str, subprocess.Popen | None] = {'proc': None}
     branches_input = None  # Assigned when building form below; used in run_tool
@@ -30,8 +32,8 @@ def launch_interface() -> None:
         # Pass inputs to the subprocess only, so they don't leak into later runs via os.environ
         env = {
             **os.environ,
-            'GITHUB_REPOSITORIES': ','.join([r.strip() for r in repositories.value.splitlines() if r.strip()]) or GITHUB_REPOSITORIES,
-            'GITHUB_TOKEN': ','.join([t.strip() for t in token_map.value.splitlines() if t.strip()]) or GITHUB_TOKEN,
+            'GHCS_REPOSITORIES': ','.join([r.strip() for r in repositories.value.splitlines() if r.strip()]) or GHCS_REPOSITORIES,
+            'GHCS_TOKEN': ','.join([t.strip() for t in token_map.value.splitlines() if t.strip()]) or GHCS_TOKEN,
         }
 
         cmd = [
@@ -98,7 +100,7 @@ def launch_interface() -> None:
     def validate_repositories(value: str) -> str | None:
         # Username may only contain alphanumeric characters or single hyphens, and cannot begin or end with a hyphen.
         # The repository name can only contain ASCII letters, digits, and the characters ., -, and _.
-        if not GITHUB_REPOSITORIES and not value.strip():
+        if not GHCS_REPOSITORIES and not value.strip():
             return 'Repositories cannot be empty'
         repos = [r.strip() for r in value.splitlines() if r.strip()]
         for repo in repos:
@@ -109,7 +111,7 @@ def launch_interface() -> None:
     def validate_token_map(value: str) -> str | None:
         # Username may only contain alphanumeric characters or single hyphens, and cannot begin or end with a hyphen.
         # The token name can probably only contain ASCII letters, digits, and underscores.
-        if not GITHUB_TOKEN and not value.strip():
+        if not GHCS_TOKEN and not value.strip():
             return 'Token map cannot be empty'
         token_map = [t.strip() for t in value.splitlines() if t.strip()]
         for token in token_map:
@@ -174,12 +176,12 @@ def launch_interface() -> None:
             username = ui.input('Username', validation=validate_username)\
                 .style('width: 100%').props('autocorrect=off').props('spellcheck=false')
             repositories = ui.textarea(
-                'Repositories (one per line)' + ('. If left empty, env var `GITHUB_REPOSITORIES` will be used' if GITHUB_REPOSITORIES else ''),
+                'Repositories (one per line)' + ('. If left empty, env var `GHCS_REPOSITORIES` will be used' if GHCS_REPOSITORIES else ''),
                 validation=validate_repositories,
                 placeholder='owner/repo',
             ).style('width: 100%').props('autocorrect=off').props('spellcheck=false')
             token_map = ui.textarea(
-                'Owner:Token pairs (one per line) or a token' + ('. If left empty, env var `GITHUB_TOKEN` will be used' if GITHUB_TOKEN else ''),
+                'Owner:Token pairs (one per line) or a token' + ('. If left empty, env var `GHCS_TOKEN` will be used' if GHCS_TOKEN else ''),
                 validation=validate_token_map,
                 placeholder='owner:token or token',
             ).style('width: 100%').props('autocorrect=off').props('spellcheck=false')

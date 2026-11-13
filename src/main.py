@@ -23,6 +23,7 @@ from src.modules.api import (
 from src.modules.diff import DiffGenerator
 from src.modules.metadata import save_metadata
 from src.modules.reports import ReportGenerator
+from src.modules.settings import get_env
 
 log = logging.getLogger(__name__)
 
@@ -148,7 +149,12 @@ def main() -> None:
     parser.add_argument('--no-verify-ssl', action='store_true', help='Disable SSL verification (not recommended)')
     parser.add_argument('--fetch-pr-commits', action='store_true', help='Fetch commits associated with user pull requests (may increase API usage)')
     parser.add_argument('--include-merge-commits', action='store_true', help='Include merge commits in the output (often excluded by default)')
-    parser.add_argument('--dedup-similar-commits', action='store_true', help='Drop duplicate commits sharing the same repo, author timestamp, message, and changed files (e.g. cherry-picks). Fetches full commit details for each commit up front to compare file lists')
+    parser.add_argument(
+        '--dedup-similar-commits',
+        action='store_true',
+        help='Drop duplicate commits sharing the same repo, author timestamp, message, and changed files (e.g. cherry-picks). '
+             'Fetches full commit details for each commit up front to compare file lists',
+    )
     parser.add_argument(
         '--commit-fields',
         nargs='+',
@@ -181,9 +187,9 @@ def main() -> None:
     since_date, ssl_verify = validate_args(args)
 
     # Parse token(s)
-    token_str = args.token or os.environ.get('GITHUB_TOKEN', '')
+    token_str = args.token or get_env('GHCS_TOKEN')
     if not token_str:
-        log.error('GitHub token is required. Set GITHUB_TOKEN environment variable or pass --token parameter')
+        log.error('GitHub token is required. Set GHCS_TOKEN environment variable or pass --token parameter')
         sys.exit(1)
     token_map = parse_token_map(token_str)
 
@@ -194,17 +200,17 @@ def main() -> None:
         sys.exit(1)
 
     # Parse repositories
-    repo_full_names_str = args.repositories or os.environ.get('GITHUB_REPOSITORIES', '')
+    repo_full_names_str = args.repositories or get_env('GHCS_REPOSITORIES')
     repo_full_names: list[str] = parse_repo_list(repo_full_names_str)
     if not repo_full_names:
-        log.error('No repositories specified. Use --repositories or set GITHUB_REPOSITORIES environment variable')
+        log.error('No repositories specified. Use --repositories or set GHCS_REPOSITORIES environment variable')
         sys.exit(1)
 
     # Group repositories by owner
     repos_by_owner = group_repos_by_owner(repo_full_names)
 
     # Parse branches (optional)
-    branches_str = args.branches or os.environ.get('GITHUB_BRANCHES', '')
+    branches_str = args.branches or get_env('GHCS_BRANCHES')
     branches: list[str] = parse_branch_list(branches_str)
 
     # Fetch repositories

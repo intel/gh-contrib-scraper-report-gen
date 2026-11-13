@@ -16,6 +16,8 @@ from github.GithubObject import NotSet
 from github.Repository import Repository
 from github.PullRequest import PullRequest
 
+from src.modules.settings import get_env
+
 log = logging.getLogger(__name__)
 
 
@@ -35,9 +37,9 @@ class GitHubAPI:
             token: GitHub API token
             ssl_verify: SSL verification mode - True (default), False, or path to CA bundle
         """
-        self.token = token or os.environ.get('GITHUB_TOKEN')
+        self.token = token or get_env('GHCS_TOKEN')
         if not self.token:
-            raise ValueError('GitHub token is required. Set GITHUB_TOKEN environment variable or pass token parameter')
+            raise ValueError('GitHub token is required. Set GHCS_TOKEN environment variable or pass token parameter')
 
         # Use environment variables if not explicitly provided
         if ssl_verify is True:

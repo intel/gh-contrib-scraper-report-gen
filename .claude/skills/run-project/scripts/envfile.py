@@ -5,7 +5,7 @@
 
 Usage: python envfile.py set KEY=VALUE [KEY=VALUE ...] [--root DIR] [--apply]
 
-Without --apply it only prints the diff. Refuses GITHUB_TOKEN (the user edits secrets themselves),
+Without --apply it only prints the diff. Refuses GHCS_TOKEN and other secrets (the user edits secrets themselves),
 values with spaces, quotes, '#' or '$' (the run scripts don't parse them the same way), and a .env
 that git does not ignore (or can't be checked; --no-git-check skips that). No backup copy is made, since
 it would duplicate the secrets; only the listed keys' lines change.
@@ -24,7 +24,7 @@ sys.dont_write_bytecode = True  # keep the skill folder free of __pycache__
 from _common import ENV_LINE, SECRET_KEY, configure_stdout, fail, find_project_root, redact_url  # noqa: E402
 
 KEY_PATTERN = re.compile(r'^[A-Z][A-Z0-9_]*$')
-SECRET_KEYS = {'GITHUB_TOKEN'}
+SECRET_KEYS = {'GHCS_TOKEN', 'GITHUB_TOKEN'}
 
 
 def main() -> None:

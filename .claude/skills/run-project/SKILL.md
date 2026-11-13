@@ -35,7 +35,9 @@ Scripts: `${CLAUDE_SKILL_DIR}/scripts/` (Python 3.10+, stdlib only, read-only un
    ```
    If `ready` is false (`missing` non-empty), or the venv is missing/broken, run the setup in
    [references/setup.md](references/setup.md), then come back here. Also use it when the user asks to
-   set up, reconfigure, or rediscover repositories.
+   set up, reconfigure, or rediscover repositories. If `legacy_names` is non-empty, tell the user those
+   deprecated names (e.g. `GITHUB_TOKEN`, which other GitHub tools also read) still work but should be
+   renamed to the listed `GHCS_*` names in `.env` or their shell profile; they make that edit themselves.
 
 2. **Resolve the run parameters.** Defaults unless the user (or a stored preference) says otherwise:
 
@@ -43,7 +45,7 @@ Scripts: `${CLAUDE_SKILL_DIR}/scripts/` (Python 3.10+, stdlib only, read-only un
    |---|---|
    | username | from the request, conversation, or memory; else ask (suggest the token `login` from preflight) |
    | `--since` | `last_run.generated_at` from preflight -- **always confirm** with the user unless they gave a date; ask if there is no previous run |
-   | `--branches` | none (default branch only), even if `GITHUB_BRANCHES` is set -- mention it if set |
+   | `--branches` | none (default branch only), even if `GHCS_BRANCHES` is set -- mention it if set |
    | `--fetch-pr-commits` | on |
    | `--dedup-similar-commits` | on |
    | `--commit-fields` | all choices |
@@ -54,7 +56,7 @@ Scripts: `${CLAUDE_SKILL_DIR}/scripts/` (Python 3.10+, stdlib only, read-only un
    `-PythonArgs` is one string re-parsed by the run script (word splitting in `run.sh`,
    `Invoke-Expression` in `run.ps1`), so pass `--since` as `YYYY-MM-DDTHH:MM:SS` or `YYYY-MM-DD` and avoid
    spaces and shell-special characters in values. Repositories and tokens come from `.env`/environment;
-   don't pass them as arguments. When preflight shows `branches` (`GITHUB_BRANCHES` set) but the default
+   don't pass them as arguments. When preflight shows `branches` (`GHCS_BRANCHES` set) but the default
    applies, override it with an empty branch list -- it parses to no branches (see `parse_branch_list` in
    `src/main.py`): `--branches ,` with `run.sh`, `--branches ','` with `run.ps1` (a bare `,` is a PowerShell
    operator). Say so in the report-back.

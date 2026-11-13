@@ -10,7 +10,7 @@ The scraper needs an explicit repository list (README.md "Known limitations"). D
 ```
 
 Use a wide enough window (e.g. the last 3-6 months) so occasional repositories show up. Pass the current
-`GITHUB_REPOSITORIES` (and the last run's repositories, if any) via `--extra-repos` so they are re-checked
+`GHCS_REPOSITORIES` (and the last run's repositories, if any) via `--extra-repos` so they are re-checked
 rather than silently dropped. It runs sequentially and may take a minute or more.
 
 Sources, merged per token (see the script's docstring): GitHub contribution data (GraphQL), PR search,

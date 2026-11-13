@@ -22,7 +22,7 @@ If `token.present` is false or a token is invalid:
 - Point the user to README.md "Setting up GitHub Personal Access Token" (permissions, per-owner token map
   format, `.env`). Recommend fine-grained read-only tokens; one per organisation (resource owner) works well
   with the owner:token map.
-- The user adds `GITHUB_TOKEN=...` to `.env` themselves (never via chat). Then re-run preflight and check
+- The user adds `GHCS_TOKEN=...` to `.env` themselves (never via chat). Then re-run preflight and check
   `api.tokens[]`: `valid`, `login`, `sso`. An `sso` note means the token must be authorised for the
   organisation's single sign-on on GitHub's token settings page.
 - Repositories the scraper can't access are logged at run time ("Failed to fetch repository ...").
@@ -36,8 +36,8 @@ Use the request, conversation, or memory; otherwise suggest `api.tokens[].login`
 If `repositories.count` is 0 (or the user wants to rediscover), run [discovery.md](discovery.md), let the
 user confirm the list, then:
 ```
-<py> "<skill>/scripts/envfile.py" set GITHUB_REPOSITORIES=<owner/repo,owner/repo,...>          # shows the diff
-<py> "<skill>/scripts/envfile.py" set GITHUB_REPOSITORIES=<...> --apply                        # after confirmation
+<py> "<skill>/scripts/envfile.py" set GHCS_REPOSITORIES=<owner/repo,owner/repo,...>          # shows the diff
+<py> "<skill>/scripts/envfile.py" set GHCS_REPOSITORIES=<...> --apply                        # after confirmation
 ```
 
 ## 6. Memories

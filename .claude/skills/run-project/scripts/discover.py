@@ -6,7 +6,7 @@
 Usage: python discover.py USERNAME --since YYYY-MM-DD [--until YYYY-MM-DD] [--root DIR] [--api-url URL]
                           [--max-repos N] [--max-prs N] [--ca-bundle PATH] [--no-verify-ssl]
 
-Uses every token in GITHUB_TOKEN (environment or the project's .env), then merges:
+Uses every token in GHCS_TOKEN (or legacy GITHUB_TOKEN; environment or the project's .env), then merges:
   1. GraphQL contributionsCollection (commits/PRs per repository; default branches only)
   2. PR search (repositories where the user opened PRs; finds work outside default branches)
   3. Commit search (fallback when GraphQL is unavailable to a token)
@@ -25,7 +25,7 @@ import sys
 sys.dont_write_bytecode = True  # keep the skill folder free of __pycache__
 
 from _common import (DEFAULT_API_URL, GitHubClient, configure_stdout, describe_error, fail,  # noqa: E402
-                     find_project_root, load_settings, parse_tokens, ssl_context)
+                     find_project_root, get_setting, load_settings, parse_tokens, ssl_context)
 
 CONTRIBUTIONS_QUERY = """
 query($login: String!, $from: DateTime!, $to: DateTime!) {
@@ -217,9 +217,9 @@ def main() -> None:
 
     root = find_project_root(args.root)
     settings = load_settings(root) if root else {}
-    tokens = parse_tokens(settings.get('GITHUB_TOKEN', ''))
+    tokens = parse_tokens(get_setting(settings, 'GHCS_TOKEN')[0])
     if not tokens:
-        fail('No GITHUB_TOKEN in the environment or .env')
+        fail('No GHCS_TOKEN in the environment or .env')
     context = ssl_context(settings, args.no_verify_ssl, args.ca_bundle)
     clients = {key: GitHubClient(token, args.api_url, context) for key, token in tokens.items()}
 

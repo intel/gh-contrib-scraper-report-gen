@@ -21,6 +21,8 @@ DEFAULT_API_URL = 'https://api.github.com'
 NETWORK_KEYS = ('HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'no_proxy',
                 'REQUESTS_CA_BUNDLE', 'SSL_CERT_FILE')
 ENV_LINE = re.compile(r'^\s*([^#][^=]+)=(.*)$')  # same pattern as run.ps1
+# Current name -> deprecated name still read by the scraper (src/modules/settings.py)
+LEGACY_NAMES = {'GHCS_TOKEN': 'GITHUB_TOKEN', 'GHCS_REPOSITORIES': 'GITHUB_REPOSITORIES', 'GHCS_BRANCHES': 'GITHUB_BRANCHES'}
 SECRET_KEY = re.compile(r'TOKEN|SECRET|PASSWORD|PASSWD|KEY', re.IGNORECASE)
 # Process environment as it was before load_settings() added .env values
 ORIGINAL_ENVIRON = dict(os.environ)
@@ -67,7 +69,7 @@ def read_env_file(path: str) -> dict[str, str]:
 def load_settings(root: str) -> dict[str, str]:
     """Return effective settings as the run scripts see them: .env is loaded after, and so overrides, the environment."""
     env_file = read_env_file(os.path.join(root, '.env'))
-    settings = {k: v for k, v in ORIGINAL_ENVIRON.items() if k.startswith('GITHUB_') or k in NETWORK_KEYS}
+    settings = {k: v for k, v in ORIGINAL_ENVIRON.items() if k in LEGACY_NAMES or k in LEGACY_NAMES.values() or k in NETWORK_KEYS}
     settings.update(env_file)
     # Make proxy/CA settings visible to urllib in this process
     for key in NETWORK_KEYS:
@@ -76,8 +78,16 @@ def load_settings(root: str) -> dict[str, str]:
     return settings
 
 
+def get_setting(settings: dict[str, str], name: str) -> tuple[str, str | None]:
+    """Return (value, name it came from), falling back to the legacy name like the scraper does."""
+    for key in (name, LEGACY_NAMES.get(name)):
+        if key and settings.get(key):
+            return settings[key], key
+    return '', None
+
+
 def parse_tokens(token_str: str) -> dict[str, str]:
-    """Parse GITHUB_TOKEN: a single token (key '*') or an owner:token,owner2:token2 map (keys lowercased)."""
+    """Parse GHCS_TOKEN: a single token (key '*') or an owner:token,owner2:token2 map (keys lowercased)."""
     token_str = (token_str or '').strip()
     if not token_str:
         return {}
@@ -155,7 +165,7 @@ class GitHubClient:
                 except ValueError:
                     payload = None
                 limited = e.code in (403, 429) and (response_headers.get('Retry-After')
-                                                     or response_headers.get('X-RateLimit-Remaining') == '0')
+                                                    or response_headers.get('X-RateLimit-Remaining') == '0')
                 if limited and attempt < 2:
                     wait = int(response_headers.get('Retry-After') or 0)
                     if not wait and response_headers.get('X-RateLimit-Reset'):

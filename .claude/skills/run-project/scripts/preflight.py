@@ -24,7 +24,7 @@ from datetime import datetime
 sys.dont_write_bytecode = True  # keep the skill folder free of __pycache__
 
 from _common import (DEFAULT_API_URL, NETWORK_KEYS, ORIGINAL_ENVIRON, GitHubClient, configure_stdout, describe_error,  # noqa: E402
-                     fail, find_project_root, fingerprint, load_settings, parse_tokens, read_env_file,
+                     fail, find_project_root, fingerprint, get_setting, load_settings, parse_tokens, read_env_file,
                      redact_url, ssl_context)
 
 RUN_DIR_PATTERN = re.compile(r'^\d{8}_\d{6}$')
@@ -135,8 +135,14 @@ def main() -> None:
     env_path = os.path.join(root, '.env')
     env_file = read_env_file(env_path)
     settings = load_settings(root)
-    tokens = parse_tokens(settings.get('GITHUB_TOKEN', ''))
-    repositories = [r for r in settings.get('GITHUB_REPOSITORIES', '').split(',') if r.strip()]
+    token_str, token_key = get_setting(settings, 'GHCS_TOKEN')
+    repositories_str, repositories_key = get_setting(settings, 'GHCS_REPOSITORIES')
+    branches, branches_key = get_setting(settings, 'GHCS_BRANCHES')
+    tokens = parse_tokens(token_str)
+    repositories = [r for r in repositories_str.split(',') if r.strip()]
+
+    def source(key: str | None) -> str | None:
+        return '.env' if key in env_file else ('environment' if key in ORIGINAL_ENVIRON else None)
 
     code, _ = run_quiet(['git', 'check-ignore', '-q', '.env'], root) if shutil.which('git') else (-1, '')
     result = {
@@ -152,12 +158,13 @@ def main() -> None:
                      'quoted_values': sorted(k for k, v in env_file.items() if v[:1] in '"\'' and v[-1:] == v[:1])},
         # Keys set both in the environment and .env with different values (.env wins in the run scripts)
         'overridden_by_env_file': sorted(k for k, v in env_file.items() if k in ORIGINAL_ENVIRON and ORIGINAL_ENVIRON[k] != v),
-        'token': {'present': bool(tokens), 'source': '.env' if 'GITHUB_TOKEN' in env_file else
-                  ('environment' if 'GITHUB_TOKEN' in ORIGINAL_ENVIRON else None),
+        'token': {'present': bool(tokens), 'source': source(token_key),
                   'owners': sorted(tokens), 'fingerprints': {k: fingerprint(v) for k, v in tokens.items()}},
-        'repositories': {'count': len(repositories), 'source': '.env' if 'GITHUB_REPOSITORIES' in env_file
-                         else ('environment' if 'GITHUB_REPOSITORIES' in ORIGINAL_ENVIRON else None)},
-        'branches': settings.get('GITHUB_BRANCHES') or None,
+        'repositories': {'count': len(repositories), 'source': source(repositories_key)},
+        'branches': branches or None,
+        # Deprecated names (e.g. GITHUB_TOKEN) the scraper falls back to: suggest renaming them to GHCS_*
+        'legacy_names': {key: name for name, key in (('GHCS_TOKEN', token_key), ('GHCS_REPOSITORIES', repositories_key),
+                                                     ('GHCS_BRANCHES', branches_key)) if key and key != name},
         'network': network_info(root, env_file, settings),
         'last_run': last_run(root, args.output_dir),
     }

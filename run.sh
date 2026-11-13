@@ -40,11 +40,11 @@ VENV_PATH="./.venv"
 ENV_FILE="./.env"
 REQUIREMENTS_FILE="./requirements.txt"
 
-# Read additional pip flags from environment
-# This is the same: $PIP_INSTALL_FLAGS is used by pip command
+# Additional pip flags from the environment (legacy name: PIP_INSTALL_FLAGS)
+GHCS_PIP_FLAGS="${GHCS_PIP_FLAGS:-$PIP_INSTALL_FLAGS}"
 
-# Python interpreter used to create the virtual environment (override with PYTHON_BIN)
-PYTHON_BIN="${PYTHON_BIN:-$(command -v python3.14 || command -v python3)}"
+# Python interpreter used to create the virtual environment (override with GHCS_PYTHON; legacy name: PYTHON_BIN)
+GHCS_PYTHON="${GHCS_PYTHON:-${PYTHON_BIN:-$(command -v python3.14 || command -v python3)}}"
 
 # Exit if the given interpreter is older than Python 3.14
 function check_python_version {
@@ -65,8 +65,8 @@ function enable_venv {
         return 1 # false, no install needed
     else
         echo "Virtual environment not found. Creating one..."
-        check_python_version "$PYTHON_BIN" "Set PYTHON_BIN to a Python 3.14+ interpreter."
-        "$PYTHON_BIN" -m venv "$VENV_PATH"
+        check_python_version "$GHCS_PYTHON" "Set GHCS_PYTHON to a Python 3.14+ interpreter."
+        "$GHCS_PYTHON" -m venv "$VENV_PATH"
         # shellcheck disable=SC1091
         source "$VENV_PATH/bin/activate"
         return 0 # true, install needed
@@ -91,7 +91,7 @@ function install_requirements {
     echo "Installing dependencies..."
     # We can pass flags via the environment variable
     # shellcheck disable=SC2086
-    pip install $PIP_INSTALL_FLAGS -r "$REQUIREMENTS_FILE"
+    pip install $GHCS_PIP_FLAGS -r "$REQUIREMENTS_FILE"
 }
 
 # Execute a single task

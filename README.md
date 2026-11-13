@@ -60,16 +60,16 @@ The `run` script is a helper that automates the installation of dependencies and
     ./run.sh install
     ```
 
-  > __NOTE__: If using the run script, to provide custom pip flags, set the `PIP_INSTALL_FLAGS` environment variable before running. For example:
+  > __NOTE__: If using the run script, to provide custom pip flags, set the `GHCS_PIP_FLAGS` environment variable before running. For example:
   >
   >  - **Windows (PowerShell)**:
   >    ```powershell
-  >    $env:PIP_INSTALL_FLAGS="--upgrade --trusted-host my.host"
+  >    $env:GHCS_PIP_FLAGS="--upgrade --trusted-host my.host"
   >    .\run.ps1 -Tasks install
   >    ```
   >  - **Linux (Bash)**:
   >    ```bash
-  >    export PIP_INSTALL_FLAGS="--upgrade --trusted-host my.host"
+  >    export GHCS_PIP_FLAGS="--upgrade --trusted-host my.host"
   >    ./run.sh install
   >    ```
   >
@@ -86,18 +86,20 @@ The `run` script is a helper that automates the installation of dependencies and
 
     - **Windows (PowerShell)**:
       ```powershell
-      $env:GITHUB_TOKEN="your_token_here"
+      $env:GHCS_TOKEN="your_token_here"
       ```
     - **Linux (Bash)**:
       ```bash
-      export GITHUB_TOKEN="your_token_here"
+      export GHCS_TOKEN="your_token_here"
       ```
 
   - Or create a `.env` file with your token:
 
     ```plain
-    GITHUB_TOKEN=your_token_here
+    GHCS_TOKEN=your_token_here
     ```
+
+  > __NOTE__: The project's environment variables are prefixed with `GHCS_` (GitHub Contrib Scraper) so they don't clash with variables other GitHub tools read. The older names `GITHUB_TOKEN`, `GITHUB_REPOSITORIES`, `GITHUB_BRANCHES`, `PIP_INSTALL_FLAGS` and `PYTHON_BIN` still work but are deprecated: rename them to `GHCS_TOKEN`, `GHCS_REPOSITORIES`, `GHCS_BRANCHES`, `GHCS_PIP_FLAGS` and `GHCS_PYTHON`.
 
     > __NOTE__: The `.env` variables are loaded automatically only when using the run script.
 
@@ -159,7 +161,7 @@ python -m src.main <username> --since "YYYY-MM-DD" `
 
 - __--repositories__: Comma-separated list of repositories (can also be set via environment variable)
 
-- __--branches__: Comma-separated list of branch names to scrape (e.g. `main,develop`). If omitted, only each repository's default branch is scraped. Can also be set via `GITHUB_BRANCHES` environment variable.
+- __--branches__: Comma-separated list of branch names to scrape (e.g. `main,develop`). If omitted, only each repository's default branch is scraped. Can also be set via `GHCS_BRANCHES` environment variable.
 
 - __--output__: Base output directory (default: `output/`); each run writes its results to a timestamped subdirectory `<output>/<YYYYmmdd_HHMMSS>/`
 
@@ -207,19 +209,19 @@ You can also set the repositories to scan using an environment variable:
 
 - **Windows (PowerShell)**:
   ```powershell
-  $env:GITHUB_REPOSITORIES="owner/repo1,owner/repo2"
+  $env:GHCS_REPOSITORIES="owner/repo1,owner/repo2"
   python -m src.main <username> --since "2023-01-01" --token "your_token_here"
   ```
 - **Linux (Bash)**:
   ```bash
-  export GITHUB_REPOSITORIES="owner/repo1,owner/repo2"
+  export GHCS_REPOSITORIES="owner/repo1,owner/repo2"
   python3 -m src.main <username> --since "2023-01-01" --token "your_token_here"
   ```
 
 Or in your `.env` file:
 
 ```plain
-GITHUB_REPOSITORIES=owner/repo1,owner/repo2
+GHCS_REPOSITORIES=owner/repo1,owner/repo2
 ```
 
 > __BTW__: Unfortunately, a working solution to enable automatic scraping all repositories user contributed to has not been found. It would seem GitHub API doesn't provide a straightforward way to retrieve all repositories a user has contributed to, especially if they are private or part of an organization. The best approach seems to be to manually specify the repositories user might want to scan.
@@ -337,6 +339,6 @@ If you encounter SSL verification errors:
 
 - The tool does not automatically scrape all repositories a user has contributed to. You need to specify the repositories you want to scan.
 
-- By default only commits on each repository's default branch are fetched; use `--branches` (or `GITHUB_BRANCHES`) to scrape other branches.
+- By default only commits on each repository's default branch are fetched; use `--branches` (or `GHCS_BRANCHES`) to scrape other branches.
 
 - End date is not supported. The tool will fetch all commits made after the specified start date until the current date.
