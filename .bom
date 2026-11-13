@@ -20,9 +20,9 @@ docutils
 fastapi
 frozenlist
 h11
-httpcore
+httpcore2
 httptools
-httpx
+httpx2
 idna
 ifaddr
 itsdangerous
@@ -50,6 +50,7 @@ requests
 simple-websocket
 starlette
 tinycss2
+truststore
 typing-extensions
 typing-inspection
 urllib3
