@@ -6,11 +6,8 @@ on:
     paths:  # every analyzed language: all Python files (src/ and .claude/skills/) and the workflows themselves
       - '**.py'
       - '.github/workflows/**'
-  pull_request:
+  pull_request:  # no path filter: "Analyze (...)" are required checks on main, so every PR must report them
     branches: [ "main" ]
-    paths:
-      - '**.py'
-      - '.github/workflows/**'
   schedule:
     - cron: '30 23 * * 0'
   workflow_dispatch:  # manual run, e.g. to analyse main HEAD after a commit that touched no analysed path
@@ -70,6 +67,7 @@ jobs:
 
         # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
+        queries: security-extended  # local dry run on main 963af63 (CodeQL 2.27.4): no result beyond the dismissed #1
 
     # If the analyze step fails for one of the languages you are analyzing with
     # "We were unable to automatically build your code", modify the matrix above
