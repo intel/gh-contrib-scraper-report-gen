@@ -6,6 +6,12 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+  - package-ecosystem: "pip"
+    directory: "/.github/requirements"  # hash-locked CI tools (Bandit); Dependabot updates the pins and hashes
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

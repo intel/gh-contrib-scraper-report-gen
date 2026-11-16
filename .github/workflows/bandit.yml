@@ -1,0 +1,42 @@
+name: "Bandit"
+
+# Python security linter over every tracked Python file, with the project's .bandit configuration.
+# No path filter: the job is a required check on main, and a filtered workflow would leave PRs waiting for it.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '45 23 * * 0'  # weekly, so new Bandit checks or changed findings show up without a commit
+  workflow_dispatch:
+
+permissions: {}  # no default token permissions; the job below requests only what it needs
+
+jobs:
+  bandit:
+    name: Bandit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Set up Python
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+      with:
+        python-version: "3.14"  # parse the code with the Python version the project targets
+
+    - name: Install Bandit (pinned, hash-checked)
+      run: python -I -m pip install --require-hashes --only-binary ":all:" --no-deps -r .github/requirements/bandit.txt
+
+    # Bandit also finds .bandit as an INI file in the scanned root and warns that it cannot parse it; -c reads it as YAML.
+    - name: Report all findings (informational)
+      run: python -I -m bandit -c .bandit -r . --exit-zero
+
+    - name: Fail on medium or high severity
+      run: python -I -m bandit -c .bandit -r . --quiet --severity-level medium
