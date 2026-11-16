@@ -49,11 +49,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Resolve requirements.txt (same resolution as the .bom command, nothing is installed)
+    - name: Resolve requirements.txt (nothing is installed)
       run: python -I -X utf8 -m pip install --dry-run --ignore-installed --quiet --report "$RUNNER_TEMP/report.json" -r requirements.txt
 
     - name: Build snapshot
-      run: python -I -X utf8 .github/scripts/pip_report_snapshot.py "$RUNNER_TEMP/report.json" --bom .bom > "$RUNNER_TEMP/snapshot-${{ matrix.os }}.json"
+      run: python -I -X utf8 .github/scripts/pip_report_snapshot.py "$RUNNER_TEMP/report.json" > "$RUNNER_TEMP/snapshot-${{ matrix.os }}.json"
 
     - name: Keep snapshot for the submit job
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
