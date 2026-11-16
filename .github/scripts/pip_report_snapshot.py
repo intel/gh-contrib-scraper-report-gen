@@ -4,11 +4,11 @@
 """Build a GitHub dependency-graph snapshot for requirements.txt from a pip installation report.
 
 Usage: python -m pip install --dry-run --ignore-installed --quiet --report report.json -r requirements.txt
-       python pip_report_snapshot.py report.json [--bom .bom] > snapshot.json
+       python pip_report_snapshot.py report.json > snapshot.json
        gh api --method POST repos/OWNER/REPO/dependency-graph/snapshots --input snapshot.json
 
-The resolution is the same as the .bom command in requirements.txt, so the dependency graph (and Dependabot alerts)
-covers every package a fresh 'pip install -r requirements.txt' installs, not only the direct requirements.
+The dependency graph (and Dependabot alerts) then covers every package a fresh 'pip install -r requirements.txt'
+installs, not only the direct requirements.
 
 pip resolves for the platform it runs on (uvloop, for example, is not installed on Windows), so the workflow runs this
 once per OS. Each run gets its own job correlator, so the Windows and Linux snapshots do not replace each other (how
@@ -77,18 +77,9 @@ def build_snapshot(report: dict, env: dict) -> dict:
     }
 
 
-def missing_from_bom(snapshot: dict, bom_path: str) -> list[str]:
-    """Resolved package names that .bom does not list (.bom: one name per line, '#' comments)."""
-    with open(bom_path, encoding="utf-8") as f:
-        listed = {normalize(line.strip()) for line in f if line.strip() and not line.lstrip().startswith("#")}
-    names = {name for manifest in snapshot["manifests"].values() for name in manifest["resolved"]}
-    return sorted(names - listed)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n", maxsplit=1)[0])
     parser.add_argument("report", help="pip installation report (pip install --dry-run --report FILE)")
-    parser.add_argument("--bom", help="also warn about resolved packages that this .bom file does not list")
     args = parser.parse_args()
 
     with open(args.report, encoding="utf-8") as f:
@@ -112,10 +103,6 @@ def main() -> int:
         resolved = manifest["resolved"].values()
         direct = sum(r["relationship"] == "direct" for r in resolved)
         print(f"{key}: {len(resolved)} packages ({direct} direct)", file=sys.stderr)
-    if args.bom:
-        missing = missing_from_bom(snapshot, args.bom)
-        if missing:
-            print(f"::warning file={args.bom}::.bom does not list: {', '.join(missing)}", file=sys.stderr)
     return 0
 
 
