@@ -1,0 +1,93 @@
+name: "Dependency submission"
+
+# Submits the fully resolved pip tree of requirements.txt to the dependency graph, so Dependabot alerts cover
+# transitive packages too. Static parsing of requirements.txt only sees the direct requirements, without versions.
+# pip resolves per platform (uvloop is not installed on Windows), so the tree is resolved and submitted per OS.
+# Two jobs: "resolve" runs pip (which can run a package's build backend to read its metadata) with a read-only token;
+# "submit" holds the write token, runs no checkout and no pip, and only posts the snapshot files from "resolve".
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'requirements.txt'
+      - '.github/workflows/dependency-submission.yml'
+      - '.github/scripts/pip_report_snapshot.py'
+  schedule:
+    - cron: '17 5 * * 1'  # weekly: requirements use ranges, so the resolved tree changes without any commit
+  workflow_dispatch:
+
+permissions: {}  # no default token permissions; each job requests only what it needs
+
+concurrency:
+  group: dependency-submission-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve pip dependencies (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    if: github.ref == 'refs/heads/main'  # workflow_dispatch can pick any branch; the graph tracks main only
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    permissions:
+      contents: read  # checkout only
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest, ubuntu-latest ]
+        python-version: [ "3.14" ]  # README: Python 3.14 or higher
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Set up Python
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Resolve requirements.txt (same resolution as the .bom command, nothing is installed)
+      run: python -I -X utf8 -m pip install --dry-run --ignore-installed --quiet --report "$RUNNER_TEMP/report.json" -r requirements.txt
+
+    - name: Build snapshot
+      run: python -I -X utf8 .github/scripts/pip_report_snapshot.py "$RUNNER_TEMP/report.json" --bom .bom > "$RUNNER_TEMP/snapshot-${{ matrix.os }}.json"
+
+    - name: Keep snapshot for the submit job
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+      with:
+        name: snapshot-${{ matrix.os }}
+        path: ${{ runner.temp }}/snapshot-${{ matrix.os }}.json
+        if-no-files-found: error
+        retention-days: 1
+
+  submit:
+    name: Submit snapshots
+    needs: resolve
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}  # submit the OS snapshots that resolved, even if one failed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write  # required by POST /repos/{owner}/{repo}/dependency-graph/snapshots
+    steps:
+    - name: Download snapshots
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+      with:
+        pattern: snapshot-*
+        merge-multiple: true
+        path: ${{ runner.temp }}/snapshots
+
+    - name: Submit snapshots
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        files=("$RUNNER_TEMP"/snapshots/snapshot-*.json)
+        if [ ${#files[@]} -eq 0 ]; then echo "::error::no snapshot was resolved"; exit 1; fi
+        for f in "${files[@]}"; do
+          gh api --method POST "repos/$GITHUB_REPOSITORY/dependency-graph/snapshots" \
+            --input "$f" --jq '"Snapshot \(.id): \(.result) \(.message // "")"'
+        done
