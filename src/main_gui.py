@@ -3,8 +3,10 @@
 
 """Provides a NiceGUI-based graphical user interface for the project."""
 
+import argparse
 import asyncio
 from datetime import datetime
+import ipaddress
 import os
 import re
 import sys
@@ -237,8 +239,39 @@ def launch_interface() -> None:
             log_output = ui.code(language='text').style('overflow: auto; width: 100%; padding: 1rem;')
 
 
+DEFAULT_HOST = '127.0.0.1'
+DEFAULT_PORT = 8080
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description='GHContribScraperReportGen GUI')
+    parser.add_argument('--host', default=DEFAULT_HOST,
+                        help=f'Interface to listen on (default: {DEFAULT_HOST}, this computer only). '
+                             'The GUI has no authentication and runs scrapes with your token: '
+                             'any other interface exposes it to your network.')
+    parser.add_argument('--port', type=int, default=DEFAULT_PORT,
+                        help=f'Port to listen on (default: {DEFAULT_PORT})')
+    args = parser.parse_args(argv)
+    if not 0 < args.port < 65536:
+        parser.error(f'--port must be between 1 and 65535, not {args.port}')
+    return args
+
+
+def is_loopback(host: str) -> bool:
+    if host == 'localhost':
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 def main() -> None:
-    ui.run(launch_interface, title='GHContribScraperReportGen')
+    args = parse_args()
+    if not is_loopback(args.host):
+        print(f'WARNING: the GUI listens on {args.host}:{args.port}. It has no authentication, '
+              'so anyone who can reach this address can run scrapes with your token.', file=sys.stderr)
+    ui.run(launch_interface, title='GHContribScraperReportGen', host=args.host, port=args.port, reload=False)
 
 
 if __name__ in {"__main__", "__mp_main__"}:
