@@ -135,6 +135,8 @@ or
 
 This will launch the GUI in your browser at __<http://localhost:8080/>__ and guide you through the inputs.
 
+The GUI listens on this computer only (`127.0.0.1`, port `8080`). It has no login and runs scrapes with your token, so don't expose it to a network. To change the port, pass `--port`, for example `python -m src.main_gui --port 8081`. `--host` selects another interface; anything other than loopback prints a warning, since anyone who can reach that address can use your token.
+
 > __NOTE__: If run via the run script, the GUI will automatically load the `.env` file and set the environment variables. Providing the repositories and/or token(s) via the GUI will override the environment variables.
 
 ### Command Line Interface (CLI)
